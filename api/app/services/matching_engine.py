@@ -8,10 +8,16 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Configure xAI (Grok) - Compatible with OpenAI SDK
-xai_client = openai.OpenAI(
-    api_key=os.getenv("XAI_API_KEY"),
-    base_url="https://api.x.ai/v1"
-)
+def get_xai_client():
+    api_key = os.getenv("XAI_API_KEY")
+    if not api_key:
+        return None
+    return openai.OpenAI(
+        api_key=api_key,
+        base_url="https://api.x.ai/v1"
+    )
+
+xai_client = get_xai_client()
 
 # xAI Model
 MODEL = "grok-beta"
@@ -32,6 +38,8 @@ class MatchingEngine:
         Return Example: 85.5
         """
         try:
+            if not xai_client:
+                raise ValueError("XAI_API_KEY is not set")
             response = xai_client.chat.completions.create(
                 model=MODEL,
                 messages=[{"role": "user", "content": prompt}]
@@ -61,6 +69,8 @@ class MatchingEngine:
         }}
         """
         try:
+            if not xai_client:
+                raise ValueError("XAI_API_KEY is not set")
             response = xai_client.chat.completions.create(
                 model=MODEL,
                 messages=[
