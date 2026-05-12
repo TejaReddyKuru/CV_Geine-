@@ -1,27 +1,25 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "backend/main.py",
-      "use": "@vercel/python"
-    }
-  ],
   "rewrites": [
     {
       "source": "/analyze",
-      "destination": "backend/main.py"
+      "destination": "/api/index.py"
     },
     {
       "source": "/download/(.*)",
-      "destination": "backend/main.py"
+      "destination": "/api/index.py"
     },
     {
       "source": "/api/(.*)",
-      "destination": "backend/main.py"
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/",
+      "destination": "/frontend/index.html"
     },
     {
       "source": "/(.*)",
-      "destination": "frontend/$1"
+      "destination": "/frontend/$1"
     }
   ],
   "env": {

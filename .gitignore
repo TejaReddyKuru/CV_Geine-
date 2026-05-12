@@ -6,3 +6,4 @@ node_modules/
 backend/.env
 backend/package-lock.json
 bots/*/node_modules/
+.vercel
