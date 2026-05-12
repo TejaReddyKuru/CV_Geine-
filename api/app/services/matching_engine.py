@@ -1,6 +1,5 @@
 import os
 import openai
-import numpy as np
 import json
 from typing import List
 from dotenv import load_dotenv

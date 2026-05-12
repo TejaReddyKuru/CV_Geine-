@@ -4,8 +4,6 @@ python-multipart
 python-dotenv
 openai>=1.0.0
 google-generativeai
-scikit-learn
-numpy
 pdfplumber
 python-docx
 reportlab
