@@ -15,6 +15,8 @@ logger = logging.getLogger(__name__)
 WAITING_FOR_JD, WAITING_FOR_RESUME = range(2)
 
 API_BASE_URL = os.getenv("BASE_URL", "http://localhost:8000")
+if API_BASE_URL and not API_BASE_URL.startswith("http"):
+    API_BASE_URL = f"https://{API_BASE_URL}"
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Start the conversation and ask for JD."""
@@ -117,30 +119,52 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
 import openai
 
-# Initialize Groq for general chat
-groq_client = openai.OpenAI(
-    api_key=os.getenv("GROQ_API_KEY"),
-    base_url="https://api.groq.com/openai/v1"
+# Initialize xAI for general chat
+xai_client = openai.OpenAI(
+    api_key=os.getenv("XAI_API_KEY"),
+    base_url="https://api.x.ai/v1"
 )
 
 async def general_chat(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Handle normal chat using Groq."""
+    """Handle normal chat using xAI with memory."""
     user_msg = update.message.text
     if not user_msg:
         return
 
+    # Initialize history if not exists
+    if "chat_history" not in context.user_data:
+        context.user_data["chat_history"] = []
+
     # Typing indicator
     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
 
+    # Build messages with history
+    messages = [
+        {"role": "system", "content": "You are CV Genie, a premium AI Career Assistant. You help users with resumes, career advice, and interview tips. You are conversational, professional, and witty. Always remind users they can use /start to analyze their resume."}
+    ]
+    
+    # Add last 6 messages for context
+    for msg in context.user_data["chat_history"][-6:]:
+        messages.append(msg)
+    
+    # Add current message
+    messages.append({"role": "user", "content": user_msg})
+
     try:
-        response = groq_client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[
-                {"role": "system", "content": "You are a helpful AI Career Assistant. You can chat normally but also guide users to use /start for resume analysis."},
-                {"role": "user", "content": user_msg}
-            ]
+        response = xai_client.chat.completions.create(
+            model="grok-2-1212",
+            messages=messages
         )
         ai_reply = response.choices[0].message.content
+        
+        # Save to history
+        context.user_data["chat_history"].append({"role": "user", "content": user_msg})
+        context.user_data["chat_history"].append({"role": "assistant", "content": ai_reply})
+        
+        # Keep history manageable
+        if len(context.user_data["chat_history"]) > 10:
+            context.user_data["chat_history"] = context.user_data["chat_history"][-10:]
+
         await update.message.reply_text(ai_reply)
     except Exception as e:
         logger.error(f"Chat error: {e}")

@@ -1,0 +1,31 @@
+services:
+  # Backend and Frontend (served via FastAPI)
+  - type: web
+    name: cv-genie-api
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: UPLOADS_DIR
+        value: ./backend/uploads
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: XAI_API_KEY
+        sync: false
+
+  # Telegram Bot
+  - type: worker
+    name: cv-genie-bot
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python bots/telegram/bot.py
+    envVars:
+      - key: BASE_URL
+        fromService:
+          type: web
+          name: cv-genie-api
+          property: host
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: XAI_API_KEY
+        sync: false

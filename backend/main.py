@@ -1,6 +1,7 @@
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTasks
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTasks, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 import os
 import uuid
 import shutil
@@ -28,11 +29,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-UPLOADS_DIR = os.getenv("UPLOADS_DIR", "./backend/uploads")
+UPLOADS_DIR = "/tmp" if os.getenv("VERCEL") else os.getenv("UPLOADS_DIR", "./backend/uploads")
 os.makedirs(UPLOADS_DIR, exist_ok=True)
+
+@app.get("/")
+async def root():
+    return {"message": "CV Genie API is running"}
 
 @app.post("/analyze")
 async def analyze_resume(
+    request: Request,
     jd_text: str = Form(None),
     jd_file: UploadFile = File(None),
     resume_file: UploadFile = File(...)
@@ -77,9 +83,10 @@ async def analyze_resume(
         report_path = MatchReportGenerator.generate(analysis, score, report_filename)
         
         # 6. Response
-        server_url = os.getenv("BASE_URL", "http://localhost:8000")
-        download_url = f"{server_url}/download/{resume_filename}"
-        report_url = f"{server_url}/download/{report_filename}"
+        base_url = str(request.base_url).rstrip("/")
+        # On Vercel, base_url might be different depending on how it's called
+        download_url = f"{base_url}/download/{resume_filename}"
+        report_url = f"{base_url}/download/{report_filename}"
 
         return {
             "score": score,

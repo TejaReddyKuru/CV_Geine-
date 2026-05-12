@@ -5,14 +5,14 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Configure Groq (Compatible with OpenAI SDK)
-groq_client = openai.OpenAI(
-    api_key=os.getenv("GROQ_API_KEY"),
-    base_url="https://api.groq.com/openai/v1"
+# Configure xAI (Grok) - Compatible with OpenAI SDK
+xai_client = openai.OpenAI(
+    api_key=os.getenv("XAI_API_KEY"),
+    base_url="https://api.x.ai/v1"
 )
 
-# Groq Model
-MODEL = "llama-3.3-70b-versatile"
+# xAI Model
+MODEL = "grok-beta"
 
 class ResumeRewriter:
     @staticmethod
@@ -56,7 +56,7 @@ class ResumeRewriter:
         }}
         """
         try:
-            response = groq_client.chat.completions.create(
+            response = xai_client.chat.completions.create(
                 model=MODEL,
                 messages=[
                     {"role": "system", "content": "You are a professional resume writer specializing in ATS optimization. Only respond in JSON."},
@@ -66,7 +66,7 @@ class ResumeRewriter:
             )
             return json.loads(response.choices[0].message.content)
         except Exception as e:
-            print(f"Groq Rewrite Error: {e}")
+            print(f"xAI Rewrite Error: {e}")
             return {
                 "summary": "Error during rewrite", 
                 "skills": [], "experience": [], "projects": []
