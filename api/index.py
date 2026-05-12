@@ -7,6 +7,10 @@ import uuid
 import shutil
 from dotenv import load_dotenv
 
+import sys
+# Add api directory to path for Vercel
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
+
 # Import our custom logic
 from app.utils.text_extractor import TextExtractor
 from app.services.matching_engine import MatchingEngine
